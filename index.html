@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OptiGreeks — Options Pricing & Greeks Dashboard</title>
+  <meta name="description"
+    content="Interactive Black-Scholes options pricing calculator with real-time Greeks analysis, strategy builder, and sensitivity charts." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+
+<body>
+  <div class="app-layout">
+
+    <!-- ─── SIDEBAR ─── -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <span class="logo-icon">◈</span>
+          <span class="logo-text">OptiGreeks</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-label">Analysis Mode</div>
+        <button class="nav-btn active" data-mode="single" id="nav-single">
+          <span class="nav-icon">◉</span>
+          <span>Single Option</span>
+        </button>
+        <button class="nav-btn" data-mode="compare" id="nav-compare">
+          <span class="nav-icon">⧉</span>
+          <span>Compare Options</span>
+        </button>
+        <button class="nav-btn" data-mode="strategy" id="nav-strategy">
+          <span class="nav-icon">⬡</span>
+          <span>Strategy Builder</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-section">
+        <div class="nav-label">Global Market Defaults</div>
+        <div class="sidebar-field">
+          <label for="g-spot">Spot Price</label>
+          <input type="number" id="g-spot" value="100" min="0.01" step="1" />
+        </div>
+        <div class="sidebar-field">
+          <label for="g-vol">Volatility <span class="field-val" id="g-vol-val">20%</span></label>
+          <input type="range" id="g-vol" min="5" max="100" value="20" step="1" />
+        </div>
+        <div class="sidebar-field">
+          <label for="g-rate">Risk-Free Rate <span class="field-val" id="g-rate-val">5.0%</span></label>
+          <input type="range" id="g-rate" min="0" max="150" value="50" step="1" />
+        </div>
+        <div class="sidebar-field">
+          <label for="g-time">Time to Expiry <span class="field-val" id="g-time-val">1.00y</span></label>
+          <input type="range" id="g-time" min="1" max="300" value="100" step="1" />
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-about">
+          <span class="about-icon">ℹ</span>
+          <p>Black-Scholes model for European options pricing.</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ─── MAIN ─── -->
+    <main class="main-content">
+      <header class="main-header">
+        <button class="menu-toggle" id="menu-toggle" aria-label="Toggle sidebar">☰</button>
+        <div class="header-title">
+          <h1 id="page-title">Single Option Analysis</h1>
+          <p class="header-subtitle">Adjust parameters to see real-time pricing & Greeks</p>
+        </div>
+      </header>
+
+      <!-- ═══════ MODE 1: SINGLE OPTION ═══════ -->
+      <section class="mode-panel active" id="panel-single">
+
+        <div class="input-grid two-col">
+          <!-- Option Parameters -->
+          <div class="glass-card">
+            <h3 class="card-title">Option Parameters</h3>
+            <div class="field-group">
+              <div class="field">
+                <label for="s-spot">Spot Price (S)</label>
+                <input type="number" id="s-spot" value="100" min="0.01" step="1" />
+              </div>
+              <div class="field">
+                <label for="s-strike">Strike Price (K)</label>
+                <input type="number" id="s-strike" value="105" min="0.01" step="1" />
+              </div>
+              <div class="field type-toggle-field">
+                <label>Option Type</label>
+                <div class="type-toggle" id="s-type-toggle">
+                  <button class="toggle-btn active" data-val="call">Call</button>
+                  <button class="toggle-btn" data-val="put">Put</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Market Parameters -->
+          <div class="glass-card">
+            <h3 class="card-title">Market Parameters</h3>
+            <div class="field-group">
+              <div class="field">
+                <label for="s-time">Time to Expiration <span class="field-val" id="s-time-val">1.00y</span></label>
+                <input type="range" id="s-time" min="1" max="300" value="100" step="1" />
+              </div>
+              <div class="field">
+                <label for="s-rate">Risk-Free Rate <span class="field-val" id="s-rate-val">5.0%</span></label>
+                <input type="range" id="s-rate" min="0" max="150" value="50" step="1" />
+              </div>
+              <div class="field">
+                <label for="s-vol">Volatility (σ) <span class="field-val" id="s-vol-val">20%</span></label>
+                <input type="range" id="s-vol" min="5" max="100" value="20" step="1" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metrics Row -->
+        <div class="metrics-row" id="s-metrics">
+          <div class="metric-card accent-blue">
+            <div class="metric-label">Price</div>
+            <div class="metric-value" id="s-m-price">—</div>
+          </div>
+          <div class="metric-card accent-cyan">
+            <div class="metric-label">Delta (Δ)</div>
+            <div class="metric-value" id="s-m-delta">—</div>
+          </div>
+          <div class="metric-card accent-purple">
+            <div class="metric-label">Gamma (Γ)</div>
+            <div class="metric-value" id="s-m-gamma">—</div>
+          </div>
+          <div class="metric-card accent-orange">
+            <div class="metric-label">Vega (ν)</div>
+            <div class="metric-value" id="s-m-vega">—</div>
+          </div>
+          <div class="metric-card accent-red">
+            <div class="metric-label">Theta (Θ)</div>
+            <div class="metric-value" id="s-m-theta">—</div>
+          </div>
+          <div class="metric-card accent-green">
+            <div class="metric-label">Rho (ρ)</div>
+            <div class="metric-value" id="s-m-rho">—</div>
+          </div>
+        </div>
+
+        <!-- Sensitivity Analysis -->
+        <div class="glass-card">
+          <div class="card-header-row">
+            <h3 class="card-title">Sensitivity Analysis</h3>
+            <select id="s-sensitivity-var" class="styled-select">
+              <option value="spot">Spot Price (S)</option>
+              <option value="vol">Volatility (σ)</option>
+              <option value="time">Time to Expiration (T)</option>
+            </select>
+          </div>
+          <div class="charts-grid six" id="s-sensitivity-charts">
+            <div class="chart-box">
+              <div class="chart-label">Price</div><canvas id="s-chart-price"></canvas>
+            </div>
+            <div class="chart-box">
+              <div class="chart-label">Delta</div><canvas id="s-chart-delta"></canvas>
+            </div>
+            <div class="chart-box">
+              <div class="chart-label">Gamma</div><canvas id="s-chart-gamma"></canvas>
+            </div>
+            <div class="chart-box">
+              <div class="chart-label">Vega</div><canvas id="s-chart-vega"></canvas>
+            </div>
+            <div class="chart-box">
+              <div class="chart-label">Theta</div><canvas id="s-chart-theta"></canvas>
+            </div>
+            <div class="chart-box">
+              <div class="chart-label">Rho</div><canvas id="s-chart-rho"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- P/L at Expiration -->
+        <div class="glass-card collapsible-card">
+          <button class="collapsible-header" id="s-pnl-toggle">
+            <h3 class="card-title">Profit / Loss at Expiration</h3>
+            <span class="collapse-icon">▾</span>
+          </button>
+          <div class="collapsible-body open" id="s-pnl-body">
+            <div class="chart-container"><canvas id="s-chart-pnl"></canvas></div>
+            <p class="breakeven-text" id="s-breakeven">Breakeven: —</p>
+          </div>
+        </div>
+
+        <!-- Understanding the Greeks -->
+        <div class="glass-card collapsible-card">
+          <button class="collapsible-header" id="s-greeks-toggle">
+            <h3 class="card-title">Understanding the Greeks</h3>
+            <span class="collapse-icon">▾</span>
+          </button>
+          <div class="collapsible-body open" id="s-greeks-body">
+            <div class="greeks-explainer">
+              <div class="greek-item"><strong>Delta (Δ)</strong> — Sensitivity to underlying price. For calls, between 0
+                and 1; for puts, between −1 and 0.</div>
+              <div class="greek-item"><strong>Gamma (Γ)</strong> — Rate of change of Delta. Highest near the money, low
+                deep ITM/OTM.</div>
+              <div class="greek-item"><strong>Vega (ν)</strong> — Sensitivity to volatility. Options gain value when
+                volatility rises.</div>
+              <div class="greek-item"><strong>Theta (Θ)</strong> — Time decay. Options lose value as time passes
+                (usually negative).</div>
+              <div class="greek-item"><strong>Rho (ρ)</strong> — Sensitivity to interest rates. More significant for
+                longer-dated options.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════ MODE 2: COMPARE ═══════ -->
+      <section class="mode-panel" id="panel-compare">
+
+        <div class="input-grid two-col">
+          <!-- Option A -->
+          <div class="glass-card card-a">
+            <h3 class="card-title"><span class="badge badge-a">A</span> Option A</h3>
+            <div class="field-group">
+              <div class="field"><label for="a-spot">Spot Price</label><input type="number" id="a-spot" value="100"
+                  min="0.01" step="1"></div>
+              <div class="field"><label for="a-strike">Strike Price</label><input type="number" id="a-strike"
+                  value="100" min="0.01" step="1"></div>
+              <div class="field"><label for="a-time">Time to Expiry <span class="field-val"
+                    id="a-time-val">1.00y</span></label><input type="range" id="a-time" min="1" max="300" value="100"
+                  step="1"></div>
+              <div class="field"><label for="a-rate">Risk-Free Rate <span class="field-val"
+                    id="a-rate-val">5.0%</span></label><input type="range" id="a-rate" min="0" max="150" value="50"
+                  step="1"></div>
+              <div class="field"><label for="a-vol">Volatility <span class="field-val"
+                    id="a-vol-val">20%</span></label><input type="range" id="a-vol" min="5" max="100" value="20"
+                  step="1"></div>
+              <div class="field type-toggle-field"><label>Type</label>
+                <div class="type-toggle" id="a-type-toggle">
+                  <button class="toggle-btn active" data-val="call">Call</button>
+                  <button class="toggle-btn" data-val="put">Put</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Option B -->
+          <div class="glass-card card-b">
+            <h3 class="card-title"><span class="badge badge-b">B</span> Option B</h3>
+            <div class="field-group">
+              <div class="field"><label for="b-spot">Spot Price</label><input type="number" id="b-spot" value="100"
+                  min="0.01" step="1"></div>
+              <div class="field"><label for="b-strike">Strike Price</label><input type="number" id="b-strike"
+                  value="105" min="0.01" step="1"></div>
+              <div class="field"><label for="b-time">Time to Expiry <span class="field-val"
+                    id="b-time-val">1.00y</span></label><input type="range" id="b-time" min="1" max="300" value="100"
+                  step="1"></div>
+              <div class="field"><label for="b-rate">Risk-Free Rate <span class="field-val"
+                    id="b-rate-val">5.0%</span></label><input type="range" id="b-rate" min="0" max="150" value="50"
+                  step="1"></div>
+              <div class="field"><label for="b-vol">Volatility <span class="field-val"
+                    id="b-vol-val">20%</span></label><input type="range" id="b-vol" min="5" max="100" value="20"
+                  step="1"></div>
+              <div class="field type-toggle-field"><label>Type</label>
+                <div class="type-toggle" id="b-type-toggle">
+                  <button class="toggle-btn active" data-val="call">Call</button>
+                  <button class="toggle-btn" data-val="put">Put</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comparison Table -->
+        <div class="glass-card">
+          <h3 class="card-title">Comparison Table</h3>
+          <div class="table-wrapper">
+            <table class="comparison-table" id="compare-table">
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th>Option A</th>
+                  <th>Option B</th>
+                  <th>Difference</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Greeks Bar Chart -->
+        <div class="glass-card">
+          <h3 class="card-title">Greeks Comparison</h3>
+          <div class="chart-container"><canvas id="c-greeks-bar"></canvas></div>
+        </div>
+
+        <!-- Payoff Comparison -->
+        <div class="glass-card">
+          <h3 class="card-title">Payoff at Expiration</h3>
+          <div class="chart-container"><canvas id="c-payoff-chart"></canvas></div>
+        </div>
+      </section>
+
+      <!-- ═══════ MODE 3: STRATEGY ═══════ -->
+      <section class="mode-panel" id="panel-strategy">
+
+        <!-- Common Market Params -->
+        <div class="glass-card">
+          <h3 class="card-title">Market Parameters</h3>
+          <div class="field-group four-col">
+            <div class="field"><label for="st-spot">Spot Price</label><input type="number" id="st-spot" value="100"
+                min="0.01" step="1"></div>
+            <div class="field"><label for="st-vol">Volatility <span class="field-val"
+                  id="st-vol-val">20%</span></label><input type="range" id="st-vol" min="5" max="100" value="20"
+                step="1"></div>
+            <div class="field"><label for="st-rate">Risk-Free Rate <span class="field-val"
+                  id="st-rate-val">5.0%</span></label><input type="range" id="st-rate" min="0" max="150" value="50"
+                step="1"></div>
+            <div class="field"><label for="st-time">Time to Expiry <span class="field-val"
+                  id="st-time-val">1.00y</span></label><input type="range" id="st-time" min="1" max="300" value="100"
+                step="1"></div>
+          </div>
+        </div>
+
+        <div class="input-grid two-col">
+          <!-- Leg 1 -->
+          <div class="glass-card card-leg1">
+            <h3 class="card-title"><span class="badge badge-leg1">1</span> Leg 1</h3>
+            <div class="field-group">
+              <div class="field"><label for="l1-action">Action</label>
+                <select id="l1-action" class="styled-select">
+                  <option value="Buy">Buy</option>
+                  <option value="Sell">Sell</option>
+                </select>
+              </div>
+              <div class="field"><label for="l1-type">Call / Put</label>
+                <select id="l1-type" class="styled-select">
+                  <option value="call">Call</option>
+                  <option value="put">Put</option>
+                </select>
+              </div>
+              <div class="field"><label for="l1-strike">Strike</label><input type="number" id="l1-strike" value="100"
+                  min="0.01" step="1"></div>
+              <div class="field"><label for="l1-qty">Quantity</label><input type="number" id="l1-qty" value="1" min="1"
+                  step="1"></div>
+            </div>
+          </div>
+
+          <!-- Leg 2 -->
+          <div class="glass-card card-leg2">
+            <h3 class="card-title"><span class="badge badge-leg2">2</span> Leg 2</h3>
+            <div class="field-group">
+              <div class="field"><label for="l2-action">Action</label>
+                <select id="l2-action" class="styled-select">
+                  <option value="Buy">Buy</option>
+                  <option value="Sell" selected>Sell</option>
+                </select>
+              </div>
+              <div class="field"><label for="l2-type">Call / Put</label>
+                <select id="l2-type" class="styled-select">
+                  <option value="call">Call</option>
+                  <option value="put">Put</option>
+                </select>
+              </div>
+              <div class="field"><label for="l2-strike">Strike</label><input type="number" id="l2-strike" value="105"
+                  min="0.01" step="1"></div>
+              <div class="field"><label for="l2-qty">Quantity</label><input type="number" id="l2-qty" value="1" min="1"
+                  step="1"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Position Summary + Greeks -->
+        <div class="input-grid two-col">
+          <div class="glass-card">
+            <h3 class="card-title">Position Summary</h3>
+            <div class="metric-card-large" id="st-net-premium-card">
+              <div class="metric-label">Net Premium</div>
+              <div class="metric-value" id="st-net-premium">—</div>
+              <div class="metric-sub" id="st-net-type">—</div>
+            </div>
+            <div class="leg-summary" id="st-leg-summary"></div>
+          </div>
+          <div class="glass-card">
+            <h3 class="card-title">Position Greeks</h3>
+            <div class="metrics-row compact" id="st-metrics">
+              <div class="metric-card accent-cyan">
+                <div class="metric-label">Delta</div>
+                <div class="metric-value" id="st-m-delta">—</div>
+              </div>
+              <div class="metric-card accent-purple">
+                <div class="metric-label">Gamma</div>
+                <div class="metric-value" id="st-m-gamma">—</div>
+              </div>
+              <div class="metric-card accent-orange">
+                <div class="metric-label">Vega</div>
+                <div class="metric-value" id="st-m-vega">—</div>
+              </div>
+              <div class="metric-card accent-red">
+                <div class="metric-label">Theta</div>
+                <div class="metric-value" id="st-m-theta">—</div>
+              </div>
+              <div class="metric-card accent-green">
+                <div class="metric-label">Rho</div>
+                <div class="metric-value" id="st-m-rho">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Strategy Payoff -->
+        <div class="glass-card">
+          <h3 class="card-title">Strategy Payoff at Expiration</h3>
+          <div class="chart-container"><canvas id="st-payoff-chart"></canvas></div>
+          <div class="strategy-stats" id="st-stats"></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>
